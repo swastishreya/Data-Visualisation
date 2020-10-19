@@ -114,16 +114,19 @@ if __name__ == "__main__":
 
     Y = numpy.zeros((100, 100))
 
-    X = squareform(pdist(X, metric="euclidean"))
+    dist1 = squareform(pdist(X, metric="euclidean"))
+    dist2 = squareform(pdist(X.T, metric="euclidean"))
 
     seaborn.heatmap(X)
 
-    tsp_data = seriate(X)
+    tsp_data1 = seriate(dist2)
+    tsp_data2 = seriate(dist1)
     plt.figure()
-    print(tsp_data)
+    print(tsp_data1)
+    print(tsp_data2)
 
     X = pd.DataFrame(X)
-    Y = X.iloc[tsp_data, tsp_data]
+    Y = X.iloc[tsp_data2, tsp_data1]
 
     seaborn.heatmap(Y)
     plt.show()
