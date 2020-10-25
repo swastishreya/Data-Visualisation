@@ -15,6 +15,32 @@ class TSP:
         self.approximation_multiplier = approximation_multiplier
         self.timeout = timeout
 
+    # def get_ordered_data(self):
+    #     # Get distances along rows 
+    #     dist1 = squareform(pdist(self.data, metric="euclidean"))
+    #     # Get distances along columns
+    #     dist2 = squareform(pdist(self.data.T, metric="euclidean"))
+
+    #     row_order = self.seriate(dist1)
+    #     column_order = self.seriate(dist2)
+
+    #     ordered_data = pd.DataFrame(self.data)
+    #     ordered_data = ordered_data.iloc[row_order, column_order]
+    #     return ordered_data
+
+    def get_ordered_data(self):
+        # Get distances along rows 
+        dist1 = squareform(pdist(self.data, metric="euclidean"))
+        row_order = self.seriate(dist1)
+        data = pd.DataFrame(self.data)
+        data = data.iloc[row_order,:]
+
+        # Get distances along columns
+        dist2 = squareform(pdist(data.values.T, metric="euclidean"))
+        column_order = self.seriate(dist2)
+        ordered_data = data.iloc[:, column_order]
+        return ordered_data
+
     def _validate_data(self, dists: numpy.ndarray):
         """Check dists contains valid values."""
         try:
@@ -26,20 +52,6 @@ class TSP:
             raise InvalidDistanceValues("Data contains inf values.")
         if isnan:
             raise InvalidDistanceValues("Data contains NaN values.")
-
-    def get_ordered_data(self):
-        # Get distances along rows 
-        dist1 = squareform(pdist(self.data, metric="euclidean"))
-        # Get distances along columns
-        dist2 = squareform(pdist(self.data.T, metric="euclidean"))
-
-        row_order = self.seriate(dist1)
-        column_order = self.seriate(dist2)
-
-        ordered_data = pd.DataFrame(self.data)
-        ordered_data = ordered_data.iloc[row_order, column_order]
-        return ordered_data
-
 
     def seriate(self, dists: numpy.ndarray) -> List[int]:
         # Validate distances
@@ -119,6 +131,7 @@ if __name__ == "__main__":
         X[int(10.*n/7):int(10.*(n+10)/7):,n:n+40] = 1
 
     X = squareform(pdist(X, metric="euclidean"))
+    # X = squareform(pdist(X, metric="hamming"))
 
     seaborn.heatmap(X)
     plt.figure()
@@ -127,8 +140,6 @@ if __name__ == "__main__":
     X = X.T
     numpy.random.shuffle(X)
     X = X.T
-
-    Y = numpy.zeros((100, 100))
 
     seaborn.heatmap(X)
     tsp = TSP(X)

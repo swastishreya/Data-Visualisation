@@ -136,6 +136,7 @@ if __name__ == "__main__":
         X[int(10.*n/7):int(10.*(n+10)/7):,n:n+40] = 1
 
     X = distance.squareform(distance.pdist(X, metric="euclidean"))
+    # X = distance.squareform(distance.pdist(X, metric="hamming"))
 
     seaborn.heatmap(X)
     plt.figure()
