@@ -1,6 +1,3 @@
-"""Seriation - NP-hard ordering of elements in a set given the distance matrix."""
-from typing import List
-
 import numpy
 import ortools # Using ortools version 7
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
@@ -9,17 +6,18 @@ import matplotlib.pyplot as plt
 import seaborn
 import pandas as pd
 
-class TSP:
-    def __init__(self, data: numpy.ndarray, approximation_multiplier: int = 1000, timeout: float = 2.0):
+class TravelingSalesPerson:
+    def __init__(self, data, metric='euclidean', approximation_multiplier=1000, timeout=2.0):
         self.data = data
+        self.metric = metric
         self.approximation_multiplier = approximation_multiplier
         self.timeout = timeout
 
     # def get_ordered_data(self):
     #     # Get distances along rows 
-    #     dist1 = squareform(pdist(self.data, metric="euclidean"))
+    #     dist1 = squareform(pdist(self.data, metric=self.metric))
     #     # Get distances along columns
-    #     dist2 = squareform(pdist(self.data.T, metric="euclidean"))
+    #     dist2 = squareform(pdist(self.data.T, metric=self.metric))
 
     #     row_order = self.seriate(dist1)
     #     column_order = self.seriate(dist2)
@@ -30,18 +28,18 @@ class TSP:
 
     def get_ordered_data(self):
         # Get distances along rows 
-        dist1 = squareform(pdist(self.data, metric="euclidean"))
+        dist1 = squareform(pdist(self.data, metric=self.metric))
         row_order = self.seriate(dist1)
         data = pd.DataFrame(self.data)
         data = data.iloc[row_order,:]
 
         # Get distances along columns
-        dist2 = squareform(pdist(data.values.T, metric="euclidean"))
+        dist2 = squareform(pdist(data.values.T, metric=self.metric))
         column_order = self.seriate(dist2)
         ordered_data = data.iloc[:, column_order]
         return ordered_data
 
-    def _validate_data(self, dists: numpy.ndarray):
+    def _validate_data(self, dists):
         """Check dists contains valid values."""
         try:
             isinf = numpy.isinf(dists).any()
@@ -53,7 +51,7 @@ class TSP:
         if isnan:
             raise InvalidDistanceValues("Data contains NaN values.")
 
-    def seriate(self, dists: numpy.ndarray) -> List[int]:
+    def seriate(self, dists):
         # Validate distances
         self._validate_data(dists)
         if self.timeout > 0:
@@ -70,7 +68,7 @@ class TSP:
         return route
 
 
-    def _seriate(self, dists: numpy.ndarray) -> List[int]:
+    def _seriate(self, dists):
         assert dists[dists < 0].size == 0, "distances must be non-negative"
         assert self.timeout > 0
         squareform = len(dists.shape) == 2
@@ -142,7 +140,7 @@ if __name__ == "__main__":
     X = X.T
 
     seaborn.heatmap(X)
-    tsp = TSP(X)
+    tsp = TravelingSalesPerson(X)
     plt.figure()
 
     # Visualize the output data
