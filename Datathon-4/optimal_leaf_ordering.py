@@ -11,8 +11,8 @@ class OptimalLeafOrdering:
     def __init__(self, data, metric="euclidean", method='single'):
         
         self.data = data
-        self.metric=metric
-        self.method=method
+        self.metric = metric
+        self.method = method
         
     def compute_dendrogram(self, axis=0):
         if axis == 1:
@@ -43,9 +43,9 @@ class OptimalLeafOrdering:
         D is a distance matrix """
 
         def score(left, right, u, m, w, k):
-            return get_M_value(left, u, m) + get_M_value(right, w, k) + D[m, k]
+            return get_M(left, u, m) + get_M(right, w, k) + D[m, k]
 
-        def get_M_value(v, a, b):
+        def get_M(v, a, b):
             if a == b:
                 self.M[v.get_id(), a, b] = 0
             return self.M[v.get_id(), a, b]
@@ -68,8 +68,8 @@ class OptimalLeafOrdering:
                     for u in L:
                         for w in R:
                             if fast:
-                                m_order = sorted(self.other(u, LL, LR), key=lambda m: get_M_value(v.left, u, m))
-                                k_order = sorted(self.other(w, RL, RR), key=lambda k: get_M_value(v.right, w, k))
+                                m_order = sorted(self.other(u, LL, LR), key=lambda m: get_M(v.left, u, m))
+                                k_order = sorted(self.other(w, RL, RR), key=lambda k: get_M(v.right, w, k))
                                 C = min([D[m, k] for m in self.other(u, LL, LR) for k in self.other(w, RL, RR)])
                                 Cmin = 1e10
                                 for m in m_order:
@@ -134,6 +134,8 @@ if __name__ == "__main__":
     X = np.zeros((100, 100))
     for n in [0,10,20,30,40,50,60]:
         X[int(10.*n/7):int(10.*(n+10)/7):,n:n+40] = 1
+
+    X = distance.squareform(distance.pdist(X, metric="euclidean"))
 
     seaborn.heatmap(X)
     plt.figure()
