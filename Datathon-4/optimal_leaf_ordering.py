@@ -8,11 +8,17 @@ import matplotlib.pyplot as plt
 import seaborn
     
 class OptimalLeafOrdering:
-    def __init__(self, data, metric="euclidean", method='single'):
+    def __init__(self, data, data_type='data', metric="euclidean", method='single'):
         
         self.data = data
+        self.data_type = data_type
         self.metric = metric
         self.method = method
+
+    def get_ordered_data(self):
+        row_order = self.compute_dendrogram(axis=0)
+        col_order = self.compute_dendrogram(axis=1)
+        return self.data.iloc[row_order, col_order]
         
     def compute_dendrogram(self, axis=0):
         if axis == 1:
@@ -21,7 +27,16 @@ class OptimalLeafOrdering:
             data = self.data
 
         # Calculate pairwise distances and linkage
-        pairwise_dists = distance.pdist(data.values, metric=self.metric)
+        if self.data_type == 'data':
+            pairwise_dists = distance.pdist(data.values, metric=self.metric)
+        elif self.data_type == 'dist':
+            pairwise_dists = []
+            for i in range(len(data.values)):
+                for j in range(i+1, len(data.values)):
+                    pairwise_dists.append(data.values[i][j])
+            pairwise_dists = np.array(pairwise_dists)
+        else:
+            raise NotImplementedError
         linkage = hierarchy.linkage(pairwise_dists, method=self.method)
         
         self.M = {}
@@ -31,11 +46,6 @@ class OptimalLeafOrdering:
         order = self.leaves(tree)
         del self.M
         return order
-
-    def get_ordered_data(self):
-        row_order = self.compute_dendrogram(axis=0)
-        col_order = self.compute_dendrogram(axis=1)
-        return self.data.iloc[row_order, col_order]
     
     def optimal_scores(self, v, D, fast=True):
         """ Implementation of Ziv-Bar-Joseph et al.'s leaf order algorithm
@@ -90,8 +100,7 @@ class OptimalLeafOrdering:
                     return self.M[v.get_id(), l, r]
 
     def order_tree(self, v, D, fM=None, fast=True):
-        """ Returns an optimally ordered tree """
-        # Generate scores the first pass
+        
         if fM is None:
             fM = 1
             self.optimal_scores(v, D, fast=fast)

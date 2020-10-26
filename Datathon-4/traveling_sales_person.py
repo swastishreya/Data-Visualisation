@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import ortools # Using ortools version 7
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from scipy.spatial.distance import squareform, pdist
@@ -7,43 +7,54 @@ import seaborn
 import pandas as pd
 
 class TravelingSalesPerson:
-    def __init__(self, data, metric='euclidean', approximation_multiplier=1000, timeout=2.0):
+    def __init__(self, data, data_type='dist', metric='euclidean', approximation_multiplier=1000, timeout=2.0):
         self.data = data
+        self.data_type = data_type
         self.metric = metric
         self.approximation_multiplier = approximation_multiplier
         self.timeout = timeout
 
-    # def get_ordered_data(self):
-    #     # Get distances along rows 
-    #     dist1 = squareform(pdist(self.data, metric=self.metric))
-    #     # Get distances along columns
-    #     dist2 = squareform(pdist(self.data.T, metric=self.metric))
-
-    #     row_order = self.seriate(dist1)
-    #     column_order = self.seriate(dist2)
-
-    #     ordered_data = pd.DataFrame(self.data)
-    #     ordered_data = ordered_data.iloc[row_order, column_order]
-    #     return ordered_data
-
     def get_ordered_data(self):
-        # Get distances along rows 
-        dist1 = squareform(pdist(self.data, metric=self.metric))
-        row_order = self.seriate(dist1)
-        data = pd.DataFrame(self.data)
-        data = data.iloc[row_order,:]
+        if self.data_type == 'dist':
+            row_order = self.seriate(self.data)
+            column_order = self.seriate(self.data.T)
+        elif self.data_type == 'data':
+            # Get distances along rows 
+            dist1 = squareform(pdist(self.data, metric=self.metric))
+            # Get distances along columns
+            dist2 = squareform(pdist(self.data.T, metric=self.metric))
 
-        # Get distances along columns
-        dist2 = squareform(pdist(data.values.T, metric=self.metric))
-        column_order = self.seriate(dist2)
-        ordered_data = data.iloc[:, column_order]
+            row_order = self.seriate(dist1)
+            column_order = self.seriate(dist2)
+        else:
+            raise NotImplementedError
+
+        ordered_data = pd.DataFrame(self.data)
+        ordered_data = ordered_data.iloc[row_order, column_order]
         return ordered_data
 
-    def _validate_data(self, dists):
+    def get_ordered_data_recompute(self):
+        """Re-compute distances for column after computing row_order"""
+        if self.data_type == 'data': 
+            # Get distances along rows 
+            dist1 = squareform(pdist(self.data, metric=self.metric))
+            row_order = self.seriate(dist1)
+            data = pd.DataFrame(self.data)
+            data = data.iloc[row_order,:]
+
+            # Get distances along columns
+            dist2 = squareform(pdist(data.values.T, metric=self.metric))
+            column_order = self.seriate(dist2)
+            ordered_data = data.iloc[:, column_order]
+        else:
+            raise NotImplementedError
+        return ordered_data
+
+    def validate_data(self, dists):
         """Check dists contains valid values."""
         try:
-            isinf = numpy.isinf(dists).any()
-            isnan = numpy.isnan(dists).any()
+            isinf = np.isinf(dists).any()
+            isnan = np.isnan(dists).any()
         except Exception as e:
             raise InvalidDistanceValues() from e
         if isinf:
@@ -53,7 +64,7 @@ class TravelingSalesPerson:
 
     def seriate(self, dists):
         # Validate distances
-        self._validate_data(dists)
+        self.validate_data(dists)
         if self.timeout > 0:
             return self._seriate(dists=dists)
         elif self.timeout < 0:
@@ -124,7 +135,7 @@ class InvalidDistanceValues(ValueError):
 
 if __name__ == "__main__":
     # Create simulated data as in the paper
-    X = numpy.zeros((100, 100))
+    X = np.zeros((100, 100))
     for n in [0,10,20,30,40,50,60]:
         X[int(10.*n/7):int(10.*(n+10)/7):,n:n+40] = 1
 
@@ -134,13 +145,13 @@ if __name__ == "__main__":
     seaborn.heatmap(X)
     plt.figure()
 
-    numpy.random.shuffle(X)
+    np.random.shuffle(X)
     X = X.T
-    numpy.random.shuffle(X)
+    np.random.shuffle(X)
     X = X.T
 
     seaborn.heatmap(X)
-    tsp = TravelingSalesPerson(X)
+    tsp = TravelingSalesPerson(X, data_type='data')
     plt.figure()
 
     # Visualize the output data
