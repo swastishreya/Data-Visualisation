@@ -2,19 +2,22 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import seaborn
 
 from traveling_sales_person import TravelingSalesPerson
 from optimal_leaf_ordering import OptimalLeafOrdering
 
+"""Data file paths"""
 deaths = "../Datathon-3/time_series_covid_19_deaths.csv"
 recovered = "../Datathon-3/time_series_covid_19_recovered.csv"
+confirmed = "../Datathon-3/time_series_covid_19_confirmed.csv"
 
 def read_data(filename):
     df_in = pd.read_csv(filename)
     dict_date = {date:'sum' for date in list(df_in.columns[4:])}
     df_in = df_in.groupby(['Country/Region']).agg(dict_date).reset_index()
-    print(df_in.isnull().values.any())
+    assert df_in.isnull().values.any() == False, "Dataframe has null values"
     return df_in
 
 def get_transpose(df_in):
@@ -31,22 +34,12 @@ def get_transpose(df_in):
 
 def get_correlation_edges(invert_df):
     corr_matrix = invert_df.corr()
-    corr_matrix = corr_matrix.fillna(-1)
-    countries = corr_matrix.index.values
-    corr_matrix = corr_matrix.values
-    corr_matrix = 1 - corr_matrix
+    corr_matrix = corr_matrix.fillna(0)
 
-    countries = list(zip(countries,range(len(countries))))
-    print(countries)
+    # Change the range of similarity values
+    corr_matrix = 1 + corr_matrix
 
     return corr_matrix
-
-def get_node_weight(df_in):
-    num_cases = {}
-    for index in df_in.index:
-        num_cases[df_in['Country/Region'][index]] = float(df_in['9/23/20'][index])/246
-    
-    return num_cases
 
 def get_average_time(df_in):
     dates_vec = list(df_in.columns)[1:]
@@ -66,29 +59,30 @@ def get_average_time(df_in):
     df_in['avg_time'] = average_time_array
 
     n_lines = int((df_in.shape[0] * (df_in.shape[0] - 1)) / 2)
-    list_country1, list_country2, list_w, list_d = [None] * n_lines, [None] * n_lines, [None] * n_lines, [None] * n_lines
+    list_country1, list_country2, list_d = [None] * n_lines, [None] * n_lines, [None] * n_lines
 
     line_index = 0
-    epsilon = 0.001
     for i in range(0, df_in.shape[0] - 1):
         for j in range(i + 1, df_in.shape[0]):
             index_i, index_j = df_in.index[i], df_in.index[j]
             list_country1[line_index] = df_in.at[index_i, 'Country/Region']
             list_country2[line_index] = df_in.at[index_j, 'Country/Region']
             diff_time = df_in.at[index_i, 'avg_time'] - df_in.at[index_j,'avg_time']
-            list_w[line_index] = (1 / (abs(diff_time) + epsilon))
             list_d[line_index] = abs(diff_time)
             line_index += 1
 
+    print(list_d, len(list_d))
     countries = list(set(list_country1+list_country2))
     countries = {countries[i]:i for i in range(len(countries))}
     # print(countries)
 
-    matrix = np.zeros((len(countries), len(countries)))
+    matrix = np.full((len(countries), len(countries)),100)
+    for i in range(len(countries)):
+        matrix[i,i] = 0
+
     idx = 0
     for i,j in zip(list_country1,list_country2):
         if np.isnan(list_d[idx]):
-            print("kaka")
             list_d[idx] = 100
         matrix[countries[i],countries[j]] = list_d[idx]
         matrix[countries[j],countries[i]] = list_d[idx]
@@ -97,37 +91,26 @@ def get_average_time(df_in):
     return matrix
 
 
-
+"""Average time matrix"""
 df_deaths = read_data(deaths)
-# num_deaths = get_node_weight(df_deaths)
-deaths_matrix = get_average_time(df_deaths)
+# deaths_matrix = get_average_time(df_deaths)
 
-"""Sparse deaths correlation matrix"""
-# invert_df = get_transpose(df_deaths)
-# corr_edges = get_correlation_edges(invert_df)
+"""Correlation matrix"""
+invert_df = get_transpose(df_deaths)
+corr_edges = get_correlation_edges(invert_df)
 
-# data = corr_edges
-data = deaths_matrix
+"""Choose which matrix to visualize"""
+data = corr_edges
+# data = deaths_matrix
 
-tsp = TravelingSalesPerson(data)
-# olo = OptimalLeafOrdering(pd.DataFrame(data), metric='euclidean', method='complete')
-seaborn.heatmap(data)
+tsp = TravelingSalesPerson(data, data_type='data')
+# olo = OptimalLeafOrdering(pd.DataFrame(data), data_type='data', metric='euclidean', method='complete')
+seaborn.heatmap(data, cmap = cm.Blues,xticklabels=True, yticklabels=True)
 plt.figure()
 
 # Visualize the output data
 Y = tsp.get_ordered_data()
 # Y = olo.get_ordered_data()
-seaborn.heatmap(Y)
+seaborn.heatmap(Y, cmap = cm.Blues,xticklabels=True, yticklabels=True)
 plt.show()
-
-"""Top 10 graph"""
-# graph_d, top_10 = get_graph_stats(deaths_graph, num_deaths)
-# edges = []
-# death_attributes = {v:w for w,v in top_10}
-# for i in range(10):
-#     for j in range(i+1, 10):
-#         if (top_10[i][1],top_10[j][1]) in graph_d:
-#             edges.append((top_10[i][1],top_10[j][1],graph_d[top_10[i][1],top_10[j][1]]))
-#         elif (top_10[j][1],top_10[i][1]) in graph_d:
-#             edges.append((top_10[j][1],top_10[i][1],graph_d[top_10[j][1],top_10[i][1]]))
 
