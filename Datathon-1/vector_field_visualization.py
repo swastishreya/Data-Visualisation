@@ -122,13 +122,14 @@ def update(current_file):
     map.drawcoastlines()
     map.drawparallels(np.arange(-90., 90., 10.), linewidth=2, labels=[1,0,0,0])
     map.drawmeridians(np.arange(-180., 180., 10.), linewidth=2, labels=[0,0,0,1])
-    h = map.contourf(lon,lat,magnitude.T,levels=np.linspace(0,3,100))
-    q = map.quiver(lon1,lat1,zonal_current.T,meridional_current.T,width=0.001, color='white', scale=150)    
-    cbar = map.colorbar(h)
-    cbar.set_label("Magnitude of current value in m/sec")
-    plt.title("Currents (zonal and meridional) in Indian Ocean on {}".format(date.strip("\"")))
+    #h = map.contourf(lon,lat,magnitude.T,levels=np.linspace(0,3,100))
+    q = map.quiver(lon1,lat1,zonal_current.T,meridional_current.T,width=0.01, color='black', scale=150)
+    plt.quiverkey(q, 0, 20, 1, "Arrow length vs magnitude")    
+    #cbar = map.colorbar(h)
+    #cbar.set_label("Magnitude of current value in m/sec")
+    plt.title("Currents (zonal and meridional) at depth = 5 in Indian Ocean on {}".format(date.strip("\"")))
 
-    return q, h
+    return q#, h
 
 
 fig = plt.figure(figsize=(16,8))
