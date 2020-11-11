@@ -41,11 +41,11 @@ We are given the tabular datasets published by the World Health Organization for
 We have used the same data as provided in Datathon 3. Our main aim is to effectively visualize the above data as a matrix and find the underlying patterns or clusters formed using two different methods of matrix seriation which are – Fast optimal leaf ordering and Seriation using Traveling Salesperson Problem formulation. These methods are implemented in the Datathon 4 folder.
 
 ### Visualizations
-Shuffled data:
+Shuffled data:\
 ![](./images/D4/shuffled_data_2.png)
-Matrix after seriation using fast OLO
+Matrix after seriation using fast OLO\
 ![](./images/D4/olo_data_2.png)
-Matrix after seriation using TSP solver
+Matrix after seriation using TSP solver\
 ![](./images/D4/tsp_data_2.png)
 
 ## Datathon 5
