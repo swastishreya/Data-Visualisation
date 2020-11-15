@@ -42,9 +42,9 @@ We have used the same data as provided in Datathon 3. Our main aim is to effecti
 
 ### Visualizations
 Shuffled data:\
-![](./images/D4/shuffled_data_2.png)
+![](./images/D4/shuffled_data_2.png)\
 Matrix after seriation using fast OLO\
-![](./images/D4/olo_data_2.png)
+![](./images/D4/olo_data_2.png)\
 Matrix after seriation using TSP solver\
 ![](./images/D4/tsp_data_2.png)
 
